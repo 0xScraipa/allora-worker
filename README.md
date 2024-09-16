@@ -39,7 +39,7 @@ docker container prune -f
 
 2. Clone the git repository
 ```
-git clone https://github.com/sarox0987/allora-worker.git
+git clone https://github.com/0xScraipa/allora-worker.git
 cd allora-worker
 ```
 
@@ -63,7 +63,6 @@ check the worker container with `docker logs -f custom-worker-0` command
 make sure `custom-inference` returns correct response
 ```
 curl http://localhost:8001/inference/ETH
-curl http://localhost:8001/inference/MEME
 ```
 
 ## [DEPRECATED] Run with hugging model and pass your mnemonic phrase to it
