@@ -125,44 +125,73 @@ func getLastPrice(token string) (string, error) {
 	return strconv.FormatFloat(adjustedPrice, 'g', -1, 64), nil
 }
 
-func getTokenPriceFromCoinGecko(token string) (string, error) {
-	baseURL := "https://api.coingecko.com/api/v3/simple/price"
-	tokenMap := map[string]string{
-		"ETH": "ethereum",
-		"SOL": "solana",
-		"BTC": "bitcoin",
-		"BNB": "binancecoin",
-		"ARB": "arbitrum",
-	}
-
-	tokenID := tokenMap[token]
-	if tokenID == "" {
-		tokenID = token
-	}
-
-	url := fmt.Sprintf("%s?ids=%s&vs_currencies=usd", baseURL, tokenID)
-	resp, err := http.Get(url)
-	if err != nil {
-		return "", fmt.Errorf("failed to get price from CoinGecko: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("CoinGecko API request failed with status: %d", resp.StatusCode)
-	}
-
-	var data map[string]map[string]float64
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return "", fmt.Errorf("failed to decode CoinGecko response: %w", err)
-	}
-
-	price, ok := data[tokenID]["usd"]
-	if !ok {
-		return "", fmt.Errorf("price for token %s not found", token)
-	}
-
-	return strconv.FormatFloat(price, 'f', 2, 64), nil
+var apiKeys = []string{
+    "CG-TxU95gTnKpbSU69rXBPDRZfn",
+    "CG-MuKoMVL1JZ8Mv4BhcMYPEF6M",
+    "CG-qb3LHfPWCdpkbpyU2kDEnAHD",
+    "CG-48RBhU9Ht18XsBYKVW6m2tkT",
+    "CG-zprA3h6Nog7ZoivMDq6CHtLN",
+    "CG-4B7ieXZ6Wdq7mz7PPsJkDXpz",
+    "CG-P9gGNPKYsrNH4Lz7ZhLkYGWi",
+    "CG-zprA3h6Nog7ZoivMDq6CHtLN",
+    "CG-qb3LHfPWCdpkbpyU2kDEnAHD",
+    "CG-MuKoMVL1JZ8Mv4BhcMYPEF6M",
 }
+
+func getSimplePrice(token string) (string, error) {
+    baseURL := "https://api.coingecko.com/api/v3/simple/price?ids="
+    tokenMap := map[string]string{
+        "ETH": "ethereum",
+        "SOL": "solana",
+        "BTC": "bitcoin",
+        "BNB": "binancecoin",
+        "ARB": "arbitrum",
+    }
+
+    // Select an API key (e.g., first key for simplicity)
+    apiKey := apiKeys[0]
+
+    // Convert token to lowercase if it's in the tokenMap
+    token = strings.ToLower(tokenMap[token])
+    url := fmt.Sprintf("%s%s&vs_currencies=usd", baseURL, token)
+
+    req, err := http.NewRequest(http.MethodGet, url, nil)
+    if err != nil {
+        return "", fmt.Errorf("failed to create new request: %w", err)
+    }
+    req.Header.Set("accept", "application/json")
+    req.Header.Set("x-cg-demo-api-key", apiKey)
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    if err != nil {
+        return "", fmt.Errorf("failed to execute request: %w", err)
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode != http.StatusOK {
+        return "", fmt.Errorf("status code %d", resp.StatusCode)
+    }
+
+    var result map[string]map[string]float64
+    body, err := io.ReadAll(resp.Body)
+    if err != nil {
+        return "", fmt.Errorf("failed to read response body: %w", err)
+    }
+
+    err = json.Unmarshal(body, &result)
+    if err != nil {
+        return "", fmt.Errorf("failed to unmarshal response: %w", err)
+    }
+
+    price, ok := result[token]["usd"]
+    if !ok {
+        return "", fmt.Errorf("price not found for token %s", token)
+    }
+
+    return fmt.Sprintf("%.2f", price), nil
+}
+
 
 func adjustPrice(price float64) float64 {
 	adjustmentFactor := rand.New(rand.NewSource(uint64(time.Now().UnixNano()))).Float64()*0.016 + 0.992
