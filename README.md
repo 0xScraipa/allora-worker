@@ -65,19 +65,4 @@ make sure `custom-inference` returns correct response
 curl http://localhost:8001/inference/ETH
 ```
 
-## [DEPRECATED] Run with hugging model and pass your mnemonic phrase to it
-```
-curl -LOs https://raw.githubusercontent.com/sarox0987/allora-worker/main/hugging-allora.sh && bash ./hugging-allora.sh
-```
-
-make sure both `hugging-worker` & `hugging-inference` containers are running with `docker ps`
-
-<img width="1406" alt="Screenshot 2024-08-17 at 3 15 37 PM" src="https://github.com/user-attachments/assets/a26281af-ecc2-497d-8379-981eac14d4d6">
-
-check the worker container with `docker logs -f hugging-worker` command
-
-make sure `hugging-inference` is responsive
-```
-curl http://localhost:8002/inference/ETH
-```
 
